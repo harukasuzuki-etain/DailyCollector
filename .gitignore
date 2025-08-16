@@ -1,0 +1,18 @@
+# Node.js
+node_modules/
+
+# n8n
+n8n-data/
+
+# OS
+.DS_Store
+
+# 環境変数ファイル
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# ログファイル
+*.log
