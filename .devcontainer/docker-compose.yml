@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+      - node_modules:/workspace/node_modules
+      - n8n_data:/workspace/n8n-data
+    
+    # n8nポートを公開
+    ports:
+      - "5678:5678"
+      - "3000:3000"
+      - "8080:8080"
+    
+    # 特権モードでDocker-in-Dockerを有効化
+    privileged: true
+    
+    environment:
+      - TZ=Asia/Tokyo
+      - DOCKER_BUILDKIT=1
+      - COMPOSE_DOCKER_CLI_BUILD=1
+    
+    # 常時起動
+    tty: true
+    stdin_open: true
+    
+    # Docker Composeネットワーク
+    networks:
+      - daily-collector-network
+
+  # 本番用n8nサービス（開発時は無効化）
+  # n8n:
+  #   image: n8nio/n8n
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5678:5678"
+  #   volumes:
+  #     - n8n_data:/home/node/.n8n
+  #   environment:
+  #     - GENERIC_TIMEZONE=Asia/Tokyo
+  #     - N8N_SECURE_COOKIE=false
+  #   networks:
+  #     - daily-collector-network
+
+volumes:
+  node_modules:
+  n8n_data:
+
+networks:
+  daily-collector-network:
+    driver: bridge

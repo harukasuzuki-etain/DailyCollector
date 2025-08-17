@@ -1,0 +1,51 @@
+{
+  "name": "Daily Collector Development Environment",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  
+  // 起動時に実行するコマンド
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  
+  // VS Code 拡張機能
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-json",
+        "ms-python.python",
+        "ms-vscode.docker",
+        "GitHub.copilot",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.remote-containers"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "files.eol": "\n",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  
+  // ポートフォワーディング
+  "forwardPorts": [5678, 3000, 8080],
+  "portsAttributes": {
+    "5678": {
+      "label": "n8n",
+      "onAutoForward": "notify"
+    }
+  },
+  
+  // コンテナ内での特権実行（Docker-in-Dockerのため）
+  "privileged": true,
+  
+  // マウント設定
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  
+  // 環境変数
+  "remoteEnv": {
+    "TZ": "Asia/Tokyo"
+  }
+}

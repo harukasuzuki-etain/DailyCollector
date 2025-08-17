@@ -1,0 +1,104 @@
+# Daily Collector - VPS本番環境用Docker Compose設定
+
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    
+    environment:
+      # 基本設定
+      - GENERIC_TIMEZONE=Asia/Tokyo
+      - TZ=Asia/Tokyo
+      
+      # セキュリティ設定
+      - N8N_SECURE_COOKIE=true
+      - N8N_PROTOCOL=https
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      
+      # Google Cloud認証
+      - GOOGLE_APPLICATION_CREDENTIALS=/home/node/.n8n/gcp-credentials.json
+      
+      # データベース設定（PostgreSQL使用時）
+      # - DB_TYPE=postgresdb
+      # - DB_POSTGRESDB_HOST=postgres
+      # - DB_POSTGRESDB_PORT=5432
+      # - DB_POSTGRESDB_DATABASE=${POSTGRES_DB}
+      # - DB_POSTGRESDB_USER=${POSTGRES_USER}
+      # - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # ログレベル
+      - N8N_LOG_LEVEL=info
+      
+      # ワークフロー実行設定
+      - EXECUTIONS_PROCESS=main
+      - EXECUTIONS_MODE=regular
+      
+    networks:
+      - daily-collector-network
+    
+    # ヘルスチェック
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL（本番環境での推奨データベース）
+  # postgres:
+  #   image: postgres:15-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     - POSTGRES_DB=${POSTGRES_DB:-n8n}
+  #     - POSTGRES_USER=${POSTGRES_USER:-n8n}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - daily-collector-network
+
+  # Nginx Reverse Proxy（HTTPS対応）
+  # nginx:
+  #   image: nginx:alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - n8n
+  #   networks:
+  #     - daily-collector-network
+
+  # スクレイパー（必要に応じて独立したサービスとして実行）
+  scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    restart: "no"  # 手動実行またはn8nから呼び出し
+    environment:
+      - TZ=Asia/Tokyo
+    networks:
+      - daily-collector-network
+    # ボリューム（ログやデータ保存用）
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  # postgres_data:
+  n8n_data:
+
+networks:
+  daily-collector-network:
+    driver: bridge
