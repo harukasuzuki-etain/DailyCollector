@@ -11,11 +11,11 @@ services:
       - node_modules:/workspace/node_modules
       - n8n_data:/workspace/n8n-data
     
-    # n8nポートを公開
+    # ポート公開（Devcontainer内でn8nを起動するため）
     ports:
-      - "5678:5678"
-      - "3000:3000"
-      - "8080:8080"
+      - "5678:5678"  # n8n
+      - "3000:3000"  # 開発用サーバー
+      - "8080:8080"  # その他のサービス
     
     # 特権モードでDocker-in-Dockerを有効化
     privileged: true

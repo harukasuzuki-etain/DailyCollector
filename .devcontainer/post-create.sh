@@ -27,8 +27,9 @@ if [ ! -f ~/.gitconfig ]; then
     git config --global init.defaultBranch main
 fi
 
-# Docker Composeサービスの起動（n8n）
-echo "🐳 n8nサービスを起動中..."
+# Docker Composeサービスの起動（Devcontainer内のn8n）
+echo "🐳 Devcontainer内でn8nサービスを起動中..."
+cd /workspace
 docker-compose up -d
 
 # サービスの起動確認
